@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+      "mcp-difyworkflow-server": {
+        "command": "mcp-wecombot-server", // mcp-wecombot-server bainary Path or mcp-wecombot-server 
+        "env": {
+          "WECOM_BOT_WEBHOOK_KEY":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+         }
+      }
+    }
+}
