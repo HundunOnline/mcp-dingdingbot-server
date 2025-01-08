@@ -117,12 +117,28 @@ func main() {
 }
 func sendTextHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		content := request.Params.Arguments["content"].(string)
-		mentionedListStr := request.Params.Arguments["mentioned_list"].(string)
-		mentionedMobileListStr := request.Params.Arguments["mentioned_mobile_list"].(string)
+		var mentionedListStr string
+		var mentionedMobileListStr string
+		var mentionedList []string
+		var mentionedMobileList []string
 
-		mentionedList := strings.Split(mentionedListStr, ",")
-		mentionedMobileList := strings.Split(mentionedMobileListStr, ",")
+		content := request.Params.Arguments["content"].(string)
+
+		if request.Params.Arguments["mentioned_list"] == nil && request.Params.Arguments["mentioned_mobile_list"] == nil {
+			mentionedListStr = ""
+			mentionedMobileListStr = ""
+		} else {
+			mentionedListStr = request.Params.Arguments["mentioned_list"].(string)
+			mentionedMobileListStr = request.Params.Arguments["mentioned_mobile_list"].(string)
+		}
+
+		if mentionedListStr != "" && mentionedMobileListStr != "" {
+			mentionedList = strings.Split(mentionedListStr, ",")
+			mentionedMobileList = strings.Split(mentionedMobileListStr, ",")
+		} else {
+			mentionedList = []string{}
+			mentionedMobileList = []string{}
+		}
 
 		err := bot.SendText(content, mentionedList, mentionedMobileList)
 		if err != nil {
