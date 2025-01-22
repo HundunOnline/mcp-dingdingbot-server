@@ -1,9 +1,19 @@
 ## 🚀 mcp-wecombot-server
+[![smithery badge](https://smithery.ai/badge/@gotoolkits/mcp-wecombot-server)](https://smithery.ai/server/@gotoolkits/mcp-wecombot-server)
 
 An MCP server application that sends various types of messages to the WeCom group robot.
 
 ### Installation
 
+### Installing via Smithery
+
+To install mcp-wecombot-server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@gotoolkits/mcp-wecombot-server):
+
+```bash
+npx -y @smithery/cli install @gotoolkits/mcp-wecombot-server --client claude-desktop
+```
+
+### Manual Installation
 ```sh
 # clone the repo and build
 $ git clone https://github.com/gotoolkits/mcp-wecombot-server.git
