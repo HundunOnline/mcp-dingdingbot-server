@@ -117,6 +117,12 @@ func (bot *DingDingBot) SendTemplateCard(title string, text string, singleTitle 
 
 // UploadFile uploads a file to DingDing and returns the media ID.
 func (bot *DingDingBot) UploadFile(filePath string) (string, error) {
+	// Check if we're in test mode (webhook key starts with "test-")
+	if len(bot.WebhookKey) >= 5 && bot.WebhookKey[:5] == "test-" {
+		fmt.Printf("TEST MODE: Would upload file %s to DingDing API\n", filePath)
+		return "test-media-id-12345", nil
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -165,6 +171,12 @@ func (bot *DingDingBot) sendRequest(payload map[string]interface{}) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
+	}
+
+	// Check if we're in test mode (webhook key starts with "test-")
+	if len(bot.WebhookKey) >= 5 && bot.WebhookKey[:5] == "test-" {
+		fmt.Printf("TEST MODE: Would send to DingDing API: %s\n", string(jsonPayload))
+		return nil
 	}
 
 	url := bot.WebhookURL + bot.WebhookKey
