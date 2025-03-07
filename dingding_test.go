@@ -41,7 +41,7 @@ func TestSendText(t *testing.T) {
 	mockServer := NewMockDingDingServer()
 	defer mockServer.Close()
 
-	bot := NewDingDingBot(mockServer.URL, "")
+	bot := NewDingDingBot(mockServer.URL, "", "")
 	err := bot.SendText("Hello, DingDing!", []string{}, []string{}, false)
 	if err != nil {
 		t.Errorf("SendText failed: %v", err)
@@ -53,7 +53,7 @@ func TestSendMarkdown(t *testing.T) {
 	mockServer := NewMockDingDingServer()
 	defer mockServer.Close()
 
-	bot := NewDingDingBot(mockServer.URL, "")
+	bot := NewDingDingBot(mockServer.URL, "", "")
 	err := bot.SendMarkdown("Hello", "## Hello, DingDing!\nThis is a markdown message.", []string{}, []string{}, false)
 	if err != nil {
 		t.Errorf("SendMarkdown failed: %v", err)
@@ -65,7 +65,7 @@ func TestSendImage(t *testing.T) {
 	mockServer := NewMockDingDingServer()
 	defer mockServer.Close()
 
-	bot := NewDingDingBot(mockServer.URL, "")
+	bot := NewDingDingBot(mockServer.URL, "", "")
 	err := bot.SendImage("SGVsbG8sIERpbmdEaW5nIQ==", "d41d8cd98f00b204e9800998ecf8427e")
 	if err != nil {
 		t.Errorf("SendImage failed: %v", err)
@@ -77,7 +77,7 @@ func TestSendNews(t *testing.T) {
 	mockServer := NewMockDingDingServer()
 	defer mockServer.Close()
 
-	bot := NewDingDingBot(mockServer.URL, "")
+	bot := NewDingDingBot(mockServer.URL, "", "")
 	err := bot.SendNews("News Title", "News Description", "https://example.com", "https://example.com/image.jpg")
 	if err != nil {
 		t.Errorf("SendNews failed: %v", err)
@@ -89,7 +89,7 @@ func TestSendTemplateCard(t *testing.T) {
 	mockServer := NewMockDingDingServer()
 	defer mockServer.Close()
 
-	bot := NewDingDingBot(mockServer.URL, "")
+	bot := NewDingDingBot(mockServer.URL, "", "")
 	err := bot.SendTemplateCard("Main Title", "Main Description", "View Details", "https://example.com", "0")
 	if err != nil {
 		t.Errorf("SendTemplateCard failed: %v", err)
@@ -101,4 +101,31 @@ func TestUploadFile(t *testing.T) {
 	// For this test, we'll just skip the actual upload since it requires a real API
 	// In a real environment, this would be tested with proper mocks or integration tests
 	t.Skip("Skipping upload file test as it requires a real DingDing API")
+}
+
+// TestSignatureGeneration tests the signature generation functionality.
+func TestSignatureGeneration(t *testing.T) {
+	mockServer := NewMockDingDingServer()
+	defer mockServer.Close()
+
+	// Test with sign key
+	bot := NewDingDingBot(mockServer.URL, "", "SECxxx")
+	timestamp := int64(1609459200000) // 2021-01-01 00:00:00
+	signature, err := bot.generateSignature(timestamp)
+	if err != nil {
+		t.Errorf("generateSignature failed: %v", err)
+	}
+	if signature == "" {
+		t.Errorf("signature should not be empty")
+	}
+
+	// Test without sign key
+	bot = NewDingDingBot(mockServer.URL, "", "")
+	signature, err = bot.generateSignature(timestamp)
+	if err != nil {
+		t.Errorf("generateSignature failed: %v", err)
+	}
+	if signature != "" {
+		t.Errorf("signature should be empty when sign key is not provided")
+	}
 }

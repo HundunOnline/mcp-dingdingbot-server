@@ -2,12 +2,17 @@ package main
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
+	"time"
 )
 
 const (
@@ -19,15 +24,32 @@ const (
 type DingDingBot struct {
 	WebhookURL string
 	WebhookKey string
+	SignKey    string // Add this field for signature verification
 }
 
-func NewDingDingBot(webhookURL, webhookKey string) *DingDingBot {
+func NewDingDingBot(webhookURL, webhookKey, signKey string) *DingDingBot {
 	return &DingDingBot{
 		WebhookURL: webhookURL,
 		WebhookKey: webhookKey,
+		SignKey:    signKey,
 	}
 }
 
+// generateSignature creates a signature for DingDing API requests using HMAC-SHA256
+func (bot *DingDingBot) generateSignature(timestamp int64) (string, error) {
+	if bot.SignKey == "" {
+		return "", nil
+	}
+	
+	stringToSign := fmt.Sprintf("%d\n%s", timestamp, bot.SignKey)
+	
+	// Create HMAC-SHA256 signature
+	h := hmac.New(sha256.New, []byte(bot.SignKey))
+	h.Write([]byte(stringToSign))
+	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
+	
+	return signature, nil
+}
 // SendText sends a text message to the DingDing group.
 func (bot *DingDingBot) SendText(content string, atMobiles []string, atUserIds []string, isAtAll bool) error {
 	payload := map[string]interface{}{
@@ -147,7 +169,19 @@ func (bot *DingDingBot) UploadFile(filePath string) (string, error) {
 		return "", err
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s%s&type=file", bot.WebhookURL, bot.WebhookKey), writer.FormDataContentType(), body)
+	requestURL := fmt.Sprintf("%s%s&type=file", bot.WebhookURL, bot.WebhookKey)
+	
+	// Add signature if sign key is provided
+	if bot.SignKey != "" {
+		timestamp := time.Now().UnixNano() / 1e6
+		signature, err := bot.generateSignature(timestamp)
+		if err != nil {
+			return "", err
+		}
+		requestURL = fmt.Sprintf("%s&timestamp=%d&sign=%s", requestURL, timestamp, url.QueryEscape(signature))
+	}
+
+	resp, err := http.Post(requestURL, writer.FormDataContentType(), body)
 	if err != nil {
 		return "", err
 	}
@@ -179,8 +213,19 @@ func (bot *DingDingBot) sendRequest(payload map[string]interface{}) error {
 		return nil
 	}
 
-	url := bot.WebhookURL + bot.WebhookKey
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
+	requestURL := bot.WebhookURL + bot.WebhookKey
+	
+	// Add signature if sign key is provided
+	if bot.SignKey != "" {
+		timestamp := time.Now().UnixNano() / 1e6
+		signature, err := bot.generateSignature(timestamp)
+		if err != nil {
+			return err
+		}
+		requestURL = fmt.Sprintf("%s&timestamp=%d&sign=%s", requestURL, timestamp, url.QueryEscape(signature))
+	}
+	
+	resp, err := http.Post(requestURL, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return err
 	}

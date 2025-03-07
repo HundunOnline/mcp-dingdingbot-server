@@ -7,7 +7,7 @@ import (
 
 func TestDingDingBotInTestMode(t *testing.T) {
 	// Create a new DingDing bot with test webhook key
-	bot := NewDingDingBot(DINGDING_BOT_SEND_URL, "test-webhook-key")
+	bot := NewDingDingBot(DINGDING_BOT_SEND_URL, "test-webhook-key", "")
 
 	// Test sending a text message
 	err := bot.SendText("Test message", []string{}, []string{}, false)

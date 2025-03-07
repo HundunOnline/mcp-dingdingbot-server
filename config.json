@@ -3,7 +3,8 @@
       "mcp-dingdingbot-server": {
         "command": "mcp-dingdingbot-server", // mcp-dingdingbot-server binary Path or mcp-dingdingbot-server 
         "env": {
-          "DINGDING_BOT_WEBHOOK_KEY":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+          "DINGDING_BOT_WEBHOOK_KEY":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
+          "DINGDING_BOT_SIGN_KEY":"SECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
          }
       }
     }

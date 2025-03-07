@@ -24,12 +24,18 @@ $ sudo ln -s $PWD/dist/mcp-dingdingbot-server_xxx_xxxx /usr/local/bin/mcp-dingdi
     "mcp-dingdingbot-server": {
       "command": "mcp-dingdingbot-server",
       "env": {
-        "DINGDING_BOT_WEBHOOK_KEY": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+        "DINGDING_BOT_WEBHOOK_KEY": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
+        "DINGDING_BOT_SIGN_KEY": "SECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
       }
     }
   }
 }
 ```
+
+## Environment Variables
+
+- `DINGDING_BOT_WEBHOOK_KEY`: The webhook key for the DingDing Bot server. This is required.
+- `DINGDING_BOT_SIGN_KEY`: The sign key for DingDing Bot signature verification. This is optional but recommended for enhanced security.
 
 ### Usage
 
@@ -80,3 +86,7 @@ https://open.dingtalk.com/document/robots/custom-robot-access
 > DINGDING_BOT_WEBHOOK_KEY is the robot webhook key<br>For example：
 > https://oapi.dingtalk.com/robot/send?access_token=693axxx6-7aoc-4bc4-97a0-0ec2sifa5aaa <br>
 > "693axxx6-7aoc-4bc4-97a0-0ec2sifa5aaa" is your own DINGDING_BOT_WEBHOOK_KEY
+>
+> DINGDING_BOT_SIGN_KEY is the signature key for enhanced security<br>
+> When enabled in the DingDing robot security settings, you need to provide this key to authenticate requests.
+> The signature verification uses HMAC-SHA256 algorithm with the timestamp and secret key.

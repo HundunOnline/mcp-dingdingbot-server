@@ -18,7 +18,10 @@ func main() {
 		return
 	}
 
-	bot := NewDingDingBot(DINGDING_BOT_SEND_URL, webhookKey)
+	// Get the sign key for signature verification (optional)
+	signKey := os.Getenv("DINGDING_BOT_SIGN_KEY")
+
+	bot := NewDingDingBot(DINGDING_BOT_SEND_URL, webhookKey, signKey)
 
 	s := server.NewMCPServer(
 		"mcp-dingdingbot-server",

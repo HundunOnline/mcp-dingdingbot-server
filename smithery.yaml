@@ -11,7 +11,10 @@ startCommand:
       dingdingBotWebhookKey:
         type: string
         description: The webhook key for the DingDing Bot server.
+      dingdingBotSignKey:
+        type: string
+        description: The sign key for DingDing Bot signature verification (optional).
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    config => ({ command: 'mcp-dingdingbot-server', env: { DINGDING_BOT_WEBHOOK_KEY: config.dingdingBotWebhookKey } })
+    config => ({ command: 'mcp-dingdingbot-server', env: { DINGDING_BOT_WEBHOOK_KEY: config.dingdingBotWebhookKey, DINGDING_BOT_SIGN_KEY: config.dingdingBotSignKey } })
