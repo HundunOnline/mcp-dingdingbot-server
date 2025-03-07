@@ -6,12 +6,12 @@ startCommand:
     # JSON Schema defining the configuration options for the MCP.
     type: object
     required:
-      - wecomBotWebhookKey
+      - dingdingBotWebhookKey
     properties:
-      wecomBotWebhookKey:
+      dingdingBotWebhookKey:
         type: string
-        description: The webhook key for the WeCom Bot server.
+        description: The webhook key for the DingDing Bot server.
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    config => ({ command: 'mcp-wecombot-server', env: { WECOM_BOT_WEBHOOK_KEY: config.wecomBotWebhookKey } })
+    config => ({ command: 'mcp-dingdingbot-server', env: { DINGDING_BOT_WEBHOOK_KEY: config.dingdingBotWebhookKey } })

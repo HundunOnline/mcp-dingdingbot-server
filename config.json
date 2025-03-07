@@ -1,9 +1,9 @@
 {
     "mcpServers": {
-      "mcp-difyworkflow-server": {
-        "command": "mcp-wecombot-server", // mcp-wecombot-server bainary Path or mcp-wecombot-server 
+      "mcp-dingdingbot-server": {
+        "command": "mcp-dingdingbot-server", // mcp-dingdingbot-server binary Path or mcp-dingdingbot-server 
         "env": {
-          "WECOM_BOT_WEBHOOK_KEY":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+          "DINGDING_BOT_WEBHOOK_KEY":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
          }
       }
     }

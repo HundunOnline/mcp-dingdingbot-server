@@ -12,47 +12,63 @@ import (
 )
 
 func main() {
-	webhookKey := os.Getenv("WECOM_BOT_WEBHOOK_KEY")
+	webhookKey := os.Getenv("DINGDING_BOT_WEBHOOK_KEY")
 	if webhookKey == "" {
-		log.Println("WECOM_BOT_WEBHOOK_KEY environment variable is required")
+		log.Println("DINGDING_BOT_WEBHOOK_KEY environment variable is required")
 		return
 	}
 
-	bot := NewWeComBot(WECOM_BOT_SEND_URL, webhookKey)
+	bot := NewDingDingBot(DINGDING_BOT_SEND_URL, webhookKey)
 
 	s := server.NewMCPServer(
-		"mcp-wecombot-server",
+		"mcp-dingdingbot-server",
 		"1.0.0",
 		server.WithResourceCapabilities(true, true),
 		server.WithLogging(),
 	)
 
 	sendTextTool := mcp.NewTool("send_text",
-		mcp.WithDescription("Send a text message to WeCom group"),
+		mcp.WithDescription("Send a text message to DingDing group"),
 		mcp.WithString("content",
 			mcp.Required(),
 			mcp.Description("Text content to send"),
 		),
-		mcp.WithString("mentioned_list",
-			mcp.Description("List of user IDs to mention,Multiple people use commas to separate, such as @xiaoyang, @wike."),
+		mcp.WithString("at_mobiles",
+			mcp.Description("List of mobile numbers to mention, multiple numbers use commas to separate, such as 13800138000,13800138001"),
 		),
-		mcp.WithString("mentioned_mobile_list",
-			mcp.Description("List of mobile numbers to mention,Multiple people use commas to separate, such as @xiaoyang, @wike."),
+		mcp.WithString("at_user_ids",
+			mcp.Description("List of user IDs to mention, multiple IDs use commas to separate"),
+		),
+		mcp.WithBoolean("is_at_all",
+			mcp.Description("Whether to mention all users in the group"),
 		),
 	)
 	s.AddTool(sendTextTool, sendTextHandler(bot))
 
 	sendMarkdownTool := mcp.NewTool("send_markdown",
-		mcp.WithDescription("Send a markdown message to WeCom group"),
+		mcp.WithDescription("Send a markdown message to DingDing group"),
+		mcp.WithString("title",
+			mcp.Required(),
+			mcp.Description("Title of the markdown message"),
+		),
 		mcp.WithString("content",
 			mcp.Required(),
 			mcp.Description("Markdown content to send"),
+		),
+		mcp.WithString("at_mobiles",
+			mcp.Description("List of mobile numbers to mention, multiple numbers use commas to separate"),
+		),
+		mcp.WithString("at_user_ids",
+			mcp.Description("List of user IDs to mention, multiple IDs use commas to separate"),
+		),
+		mcp.WithBoolean("is_at_all",
+			mcp.Description("Whether to mention all users in the group"),
 		),
 	)
 	s.AddTool(sendMarkdownTool, sendMarkdownHandler(bot))
 
 	sendImageTool := mcp.NewTool("send_image",
-		mcp.WithDescription("Send an image message to WeCom group"),
+		mcp.WithDescription("Send an image message to DingDing group"),
 		mcp.WithString("base64_data",
 			mcp.Required(),
 			mcp.Description("Base64 encoded image data"),
@@ -65,45 +81,47 @@ func main() {
 	s.AddTool(sendImageTool, sendImageHandler(bot))
 
 	sendNewsTool := mcp.NewTool("send_news",
-		mcp.WithDescription("Send a news message to WeCom group"),
-		mcp.WithString("title", mcp.Required(), mcp.Description("Title of the news article")),
-		mcp.WithString("description", mcp.Description("Description of the news article")),
-		mcp.WithString("url", mcp.Required(), mcp.Description("URL of the news article")),
-		mcp.WithString("picurl", mcp.Description("Picture URL of the news article")),
+		mcp.WithDescription("Send a link message to DingDing group"),
+		mcp.WithString("title", 
+			mcp.Required(), 
+			mcp.Description("Title of the link message")),
+		mcp.WithString("text", 
+			mcp.Required(), 
+			mcp.Description("Text content of the link message")),
+		mcp.WithString("message_url", 
+			mcp.Required(), 
+			mcp.Description("URL of the link message")),
+		mcp.WithString("pic_url", 
+			mcp.Description("Picture URL of the link message")),
 	)
 	s.AddTool(sendNewsTool, sendNewsHandler(bot))
 
 	sendTemplateCardTool := mcp.NewTool("send_template_card",
-		mcp.WithDescription("Send a template card message to WeCom group"),
-		mcp.WithString("card_type",
+		mcp.WithDescription("Send an action card message to DingDing group"),
+		mcp.WithString("title",
 			mcp.Required(),
-			mcp.Description("Type of the template card"),
+			mcp.Description("Title of the action card"),
 		),
-		mcp.WithString("main_title",
+		mcp.WithString("text",
 			mcp.Required(),
-			mcp.Description("Main title of the template card"),
+			mcp.Description("Text content of the action card"),
 		),
-		mcp.WithString("main_desc",
-			mcp.Description("Main description of the template card"),
-		),
-		mcp.WithNumber("card_action_type",
+		mcp.WithString("single_title",
 			mcp.Required(),
-			mcp.Description("Type of the card action"),
+			mcp.Description("Title of the single button"),
 		),
-		mcp.WithString("card_action_url",
-			mcp.Description("URL for the card action"),
+		mcp.WithString("single_url",
+			mcp.Required(),
+			mcp.Description("URL for the single button"),
 		),
-		mcp.WithString("card_action_appid",
-			mcp.Description("App ID for the card action"),
-		),
-		mcp.WithString("card_action_pagepath",
-			mcp.Description("Page path for the card action"),
+		mcp.WithString("btn_orientation",
+			mcp.Description("Button orientation, 0: vertical, 1: horizontal"),
 		),
 	)
 	s.AddTool(sendTemplateCardTool, sendTemplateCardHandler(bot))
 
 	uploadFileTool := mcp.NewTool("upload_file",
-		mcp.WithDescription("Upload a file to WeCom"),
+		mcp.WithDescription("Upload a file to DingDing"),
 		mcp.WithString("file_path",
 			mcp.Required(),
 			mcp.Description("Path to the file to upload"),
@@ -115,32 +133,38 @@ func main() {
 		log.Printf("Server error: %v\n", err)
 	}
 }
-func sendTextHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+
+func sendTextHandler(bot *DingDingBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		var mentionedListStr string
-		var mentionedMobileListStr string
-		var mentionedList []string
-		var mentionedMobileList []string
+		var atMobilesStr string
+		var atUserIdsStr string
+		var atMobiles []string
+		var atUserIds []string
+		var isAtAll bool
 
 		content := request.Params.Arguments["content"].(string)
 
-		if request.Params.Arguments["mentioned_list"] == nil && request.Params.Arguments["mentioned_mobile_list"] == nil {
-			mentionedListStr = ""
-			mentionedMobileListStr = ""
+		if request.Params.Arguments["at_mobiles"] != nil {
+			atMobilesStr = request.Params.Arguments["at_mobiles"].(string)
+			atMobiles = strings.Split(atMobilesStr, ",")
 		} else {
-			mentionedListStr = request.Params.Arguments["mentioned_list"].(string)
-			mentionedMobileListStr = request.Params.Arguments["mentioned_mobile_list"].(string)
+			atMobiles = []string{}
 		}
 
-		if mentionedListStr != "" && mentionedMobileListStr != "" {
-			mentionedList = strings.Split(mentionedListStr, ",")
-			mentionedMobileList = strings.Split(mentionedMobileListStr, ",")
+		if request.Params.Arguments["at_user_ids"] != nil {
+			atUserIdsStr = request.Params.Arguments["at_user_ids"].(string)
+			atUserIds = strings.Split(atUserIdsStr, ",")
 		} else {
-			mentionedList = []string{}
-			mentionedMobileList = []string{}
+			atUserIds = []string{}
 		}
 
-		err := bot.SendText(content, mentionedList, mentionedMobileList)
+		if request.Params.Arguments["is_at_all"] != nil {
+			isAtAll = request.Params.Arguments["is_at_all"].(bool)
+		} else {
+			isAtAll = false
+		}
+
+		err := bot.SendText(content, atMobiles, atUserIds, isAtAll)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to send text message: %v", err)), nil
 		}
@@ -149,12 +173,37 @@ func sendTextHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallTo
 	}
 }
 
-func sendMarkdownHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sendMarkdownHandler(bot *DingDingBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		title := request.Params.Arguments["title"].(string)
 		content := request.Params.Arguments["content"].(string)
+		
+		var atMobiles []string
+		var atUserIds []string
+		var isAtAll bool
 
-		bot.WebhookURL = WECOM_BOT_SEND_URL
-		err := bot.SendMarkdown(content)
+		if request.Params.Arguments["at_mobiles"] != nil {
+			atMobilesStr := request.Params.Arguments["at_mobiles"].(string)
+			atMobiles = strings.Split(atMobilesStr, ",")
+		} else {
+			atMobiles = []string{}
+		}
+
+		if request.Params.Arguments["at_user_ids"] != nil {
+			atUserIdsStr := request.Params.Arguments["at_user_ids"].(string)
+			atUserIds = strings.Split(atUserIdsStr, ",")
+		} else {
+			atUserIds = []string{}
+		}
+
+		if request.Params.Arguments["is_at_all"] != nil {
+			isAtAll = request.Params.Arguments["is_at_all"].(bool)
+		} else {
+			isAtAll = false
+		}
+
+		bot.WebhookURL = DINGDING_BOT_SEND_URL
+		err := bot.SendMarkdown(title, content, atMobiles, atUserIds, isAtAll)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to send markdown message: %v", err)), nil
 		}
@@ -163,12 +212,12 @@ func sendMarkdownHandler(bot *WeComBot) func(ctx context.Context, request mcp.Ca
 	}
 }
 
-func sendImageHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sendImageHandler(bot *DingDingBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		base64Data := request.Params.Arguments["base64_data"].(string)
 		md5 := request.Params.Arguments["md5"].(string)
 
-		bot.WebhookURL = WECOM_BOT_SEND_URL
+		bot.WebhookURL = DINGDING_BOT_SEND_URL
 		err := bot.SendImage(base64Data, md5)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to send image message: %v", err)), nil
@@ -178,25 +227,21 @@ func sendImageHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallT
 	}
 }
 
-func sendNewsHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sendNewsHandler(bot *DingDingBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		// Extract the parameters from the request
 		title := request.Params.Arguments["title"].(string)
-		description := request.Params.Arguments["description"].(string)
-		url := request.Params.Arguments["url"].(string)
-		picurl := request.Params.Arguments["picurl"].(string)
-
-		// Create a single NewsArticle
-		newsArticle := NewsArticle{
-			Title:       title,
-			Description: description,
-			URL:         url,
-			PicURL:      picurl,
+		text := request.Params.Arguments["text"].(string)
+		messageUrl := request.Params.Arguments["message_url"].(string)
+		picUrl := ""
+		
+		if request.Params.Arguments["pic_url"] != nil {
+			picUrl = request.Params.Arguments["pic_url"].(string)
 		}
 
 		// Send the news article
-		bot.WebhookURL = WECOM_BOT_SEND_URL
-		err := bot.SendNews([]NewsArticle{newsArticle})
+		bot.WebhookURL = DINGDING_BOT_SEND_URL
+		err := bot.SendNews(title, text, messageUrl, picUrl)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to send news message: %v", err)), nil
 		}
@@ -206,18 +251,20 @@ func sendNewsHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallTo
 	}
 }
 
-func sendTemplateCardHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sendTemplateCardHandler(bot *DingDingBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		cardType := request.Params.Arguments["card_type"].(string)
-		mainTitle := request.Params.Arguments["main_title"].(string)
-		mainDesc := request.Params.Arguments["main_desc"].(string)
-		cardActionType := request.Params.Arguments["card_action_type"].(int)
-		cardActionURL := request.Params.Arguments["card_action_url"].(string)
-		cardActionAppID := request.Params.Arguments["card_action_appid"].(string)
-		cardActionPagePath := request.Params.Arguments["card_action_pagepath"].(string)
+		title := request.Params.Arguments["title"].(string)
+		text := request.Params.Arguments["text"].(string)
+		singleTitle := request.Params.Arguments["single_title"].(string)
+		singleURL := request.Params.Arguments["single_url"].(string)
+		btnOrientation := "0"
+		
+		if request.Params.Arguments["btn_orientation"] != nil {
+			btnOrientation = request.Params.Arguments["btn_orientation"].(string)
+		}
 
-		bot.WebhookURL = WECOM_BOT_SEND_URL
-		err := bot.SendTemplateCard(cardType, mainTitle, mainDesc, cardActionType, cardActionURL, cardActionAppID, cardActionPagePath)
+		bot.WebhookURL = DINGDING_BOT_SEND_URL
+		err := bot.SendTemplateCard(title, text, singleTitle, singleURL, btnOrientation)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to send template card message: %v", err)), nil
 		}
@@ -226,11 +273,11 @@ func sendTemplateCardHandler(bot *WeComBot) func(ctx context.Context, request mc
 	}
 }
 
-func uploadFileHandler(bot *WeComBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func uploadFileHandler(bot *DingDingBot) func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		filePath := request.Params.Arguments["file_path"].(string)
 
-		bot.WebhookURL = WECOM_BOT_UPLOAD_URL
+		bot.WebhookURL = DINGDING_BOT_UPLOAD_URL
 		mediaID, err := bot.UploadFile(filePath)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to upload file: %v", err)), nil
