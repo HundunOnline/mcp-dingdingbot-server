@@ -1,6 +1,8 @@
 module mcp-dingdingbot-server
 
-go 1.18
+go 1.23
+
+toolchain go1.24.1
 
 require github.com/mark3labs/mcp-go v0.8.2
 

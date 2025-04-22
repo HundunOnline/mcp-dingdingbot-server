@@ -1,3 +1,4 @@
 mcp-webcombot-server
 dist/
 docs/
+.env
