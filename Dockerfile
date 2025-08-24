@@ -19,11 +19,25 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/mcp-wecombot-server_l
 # Final stage
 FROM alpine:latest
 
+# Install ca-certificates for SSL/TLS connections
+RUN apk --no-cache add ca-certificates
+
+# Create a non-root user and group
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
 # Set working directory
 WORKDIR /app
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/dist/mcp-wecombot-server_linux_amd64 /usr/local/bin/mcp-wecombot-server
+
+# Change ownership of the binary to the non-root user
+RUN chown appuser:appgroup /usr/local/bin/mcp-wecombot-server && \
+    chmod +x /usr/local/bin/mcp-wecombot-server
+
+# Switch to non-root user
+USER appuser
 
 # Expose any ports the application requires, if necessary
 # EXPOSE <port>
